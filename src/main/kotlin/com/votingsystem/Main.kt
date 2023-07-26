@@ -1,32 +1,70 @@
 import com.votingsystem.blockchain.Block
 import com.votingsystem.blockchain.Blockchain
+import com.votingsystem.blockchain.Transaction
 
 fun main() {
     val blockchain = Blockchain()
+    val candidates = listOf("CandidateA", "CandidateB", "CandidateC")
 
-    if (blockchain.getChain().isNotEmpty()) {
-        // Create a new block with transactions and other data.
+    while (true) {
+        println("Welcome to the Decentralized Voting System!")
+        println("Available candidates: ${candidates.joinToString(", ")}")
+
+        // Get voter's input
+        print("Enter your Voter ID: ")
+        val voterId = readLine() ?: break
+
+        // Check if the voter has already voted
+        if (blockchain.hasVoterVoted(voterId)) {
+            println("You have already voted. You cannot cast multiple votes.")
+            continue
+        }
+
+        print("Enter your candidate choice (${candidates.joinToString(", ")}): ")
+        val candidateChoice = readLine() ?: break
+
+        // Check if the candidate choice is valid
+        if (candidateChoice !in candidates) {
+            println("Invalid candidate choice. Please try again.")
+            continue
+        }
+
+        // Create a new block with the voter's transaction
         val newBlock = Block(
-            index = blockchain.getChain().last().index + 1,
+            index = blockchain.getChain().size,
             timestamp = System.currentTimeMillis(),
-            transactions = listOf(/* Add transactions here */),
-            previousHash = blockchain.getChain().last().hash,
-            hash = "", // The initial hash will be updated during mining (Proof of Work)
-            nonce = 0 // Initialize the nonce to 0
+            transactions = listOf(Transaction(voterId, candidateChoice)),
+            previousHash = blockchain.getChain().lastOrNull()?.hash ?: "0",
+            hash = "",
+            nonce = 0,
+            difficulty = 3
         )
 
-        // Calculate the hash of the new block.
+        // Calculate the hash of the new block
         newBlock.hash = newBlock.calculateHash()
 
-        // Add the new block to the blockchain.
+        // Add the new block to the blockchain
         blockchain.addBlock(newBlock)
 
-        // Verify that the new block is added to the blockchain.
-        println("Blockchain:")
-        blockchain.getChain().forEach { block ->
-            println("Index: ${block.index}, Hash: ${block.hash}")
+        // Record the voter ID to prevent multiple votes
+        blockchain.recordVote(voterId)
+
+        println("Block mined: Nonce = ${newBlock.nonce}, Hash = ${newBlock.hash}")
+        println("Vote recorded successfully!")
+
+        // Verify the votes after recording the vote
+        val isValidVotes = blockchain.verifyVotes()
+        if (!isValidVotes) {
+            println("Invalid votes detected. Please check your votes.")
+            break
         }
-    } else {
-        println("Blockchain is empty. Cannot create a new block.")
+
+        // Ask the user if they want to continue voting
+        print("Do you want to continue voting? (yes/no): ")
+        val continueVoting = readLine()?.trim()?.lowercase()
+        if (continueVoting != "yes") {
+            println("Thank you for participating in the voting.")
+            break
+        }
     }
 }
