@@ -3,8 +3,13 @@ import com.votingsystem.blockchain.Blockchain
 import com.votingsystem.blockchain.Transaction
 
 fun main() {
-    val blockchain = Blockchain()
     val candidates = listOf("CandidateA", "CandidateB", "CandidateC")
+
+    val blockchain =
+        Blockchain(
+            difficulty = 3, // Set the difficulty level to 3
+            candidates = candidates
+        )
 
     while (true) {
         println("Welcome to the Decentralized Voting System!")
@@ -30,15 +35,16 @@ fun main() {
         }
 
         // Create a new block with the voter's transaction
-        val newBlock = Block(
-            index = blockchain.getChain().size,
-            timestamp = System.currentTimeMillis(),
-            transactions = listOf(Transaction(voterId, candidateChoice)),
-            previousHash = blockchain.getChain().lastOrNull()?.hash ?: "0",
-            hash = "",
-            nonce = 0,
-            difficulty = 3
-        )
+        val newBlock =
+            Block(
+                index = blockchain.getChain().size,
+                timestamp = System.currentTimeMillis(),
+                transactions = listOf(Transaction(voterId, candidateChoice)),
+                previousHash = blockchain.getChain().lastOrNull()?.hash ?: "0",
+                hash = "",
+                nonce = 0,
+                difficulty = 3
+            )
 
         // Calculate the hash of the new block
         newBlock.hash = newBlock.calculateHash()
@@ -47,17 +53,10 @@ fun main() {
         blockchain.addBlock(newBlock)
 
         // Record the voter ID to prevent multiple votes
-        blockchain.recordVote(voterId)
+        blockchain.recordVote(voterId, candidateChoice, candidates)
 
         println("Block mined: Nonce = ${newBlock.nonce}, Hash = ${newBlock.hash}")
         println("Vote recorded successfully!")
-
-        // Verify the votes after recording the vote
-        val isValidVotes = blockchain.verifyVotes()
-        if (!isValidVotes) {
-            println("Invalid votes detected. Please check your votes.")
-            break
-        }
 
         // Ask the user if they want to continue voting
         print("Do you want to continue voting? (yes/no): ")
@@ -66,5 +65,14 @@ fun main() {
             println("Thank you for participating in the voting.")
             break
         }
+    }
+
+    // Verify the votes after all votes are recorded
+    val isValidVotes = blockchain.verifyVotes()
+    if (!isValidVotes) {
+        println("Invalid votes detected. Please check your votes.")
+    } else {
+        // View voting results after voting is complete
+        blockchain.viewResults()
     }
 }
