@@ -5,11 +5,7 @@ import com.votingsystem.blockchain.Transaction
 fun main() {
     val candidates = listOf("CandidateA", "CandidateB", "CandidateC")
 
-    val blockchain =
-        Blockchain(
-            difficulty = 3, // Set the difficulty level to 3
-            candidates = candidates
-        )
+    val blockchain = Blockchain(difficulty = 3, candidates = candidates)
 
     while (true) {
         println("Welcome to the Decentralized Voting System!")
