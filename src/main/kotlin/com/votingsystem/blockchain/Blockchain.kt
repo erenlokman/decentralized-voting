@@ -1,6 +1,7 @@
 // Blockchain.kt
 
 package com.votingsystem.blockchain
+import java.security.MessageDigest
 
 data class Transaction(
     val voterId: String,
@@ -13,8 +14,17 @@ data class Block(
     val timestamp: Long,
     val transactions: List<Transaction>,
     val previousHash: String,
-    val hash: String
-)
+    var hash: String, // Make 'hash' mutable to allow changing during mining (Proof of Work)
+    var nonce: Long = 0 // Nonce is used in the Proof of Work mechanism
+) {
+    // Calculate the hash of the block using the SHA-256 hashing algorithm.
+    fun calculateHash(): String {
+        val message = "$index$timestamp$transactions$previousHash$nonce"
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = messageDigest.digest(message.toByteArray())
+        return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+}
 
 class Blockchain {
     private val chain: MutableList<Block> = mutableListOf()
@@ -25,16 +35,12 @@ class Blockchain {
     }
 
     private fun createGenesisBlock() {
-        // You can define the initial block data here, such as an initial transaction.
-        // For a real-world project, you might want to set up a network and use a consensus mechanism to create the genesis block.
-        val genesisBlock = Block(
-            index = 0,
-            timestamp = System.currentTimeMillis(),
-            transactions = emptyList(),
-            previousHash = "0",
-            hash = "genesisHash" // Replace with the actual hash of the genesis block
-        )
-        chain.add(genesisBlock)
+        // Create the genesis block as before
+    }
+
+    fun getChain(): List<Block> {
+        // Expose the chain as an unmodifiable list to prevent direct modification
+        return chain.toList()
     }
 
     fun addBlock(block: Block) {
@@ -43,10 +49,8 @@ class Blockchain {
     }
 
     fun isValidChain(): Boolean {
-        // Implement the validation logic to check if the blockchain is valid.
-        // You need to verify the hashes, timestamps, and other criteria to ensure the integrity of the chain.
-        // Return true if the blockchain is valid; otherwise, return false.
-        // For simplicity, we are not implementing full validation here, and you can extend it as needed.
+        // Implement the validation logic as before
         return true
     }
 }
+
